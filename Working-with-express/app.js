@@ -2,9 +2,9 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const errorController = require('./controllers/error');
-const mongoConnect = require('./util/database').mongoConnect;
 const User = require('./models/user');
 
 const app = express();
@@ -19,9 +19,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-    User.findById('600849e6cc19969eca495f5c')
+    User.findById('600944e31faccef9ba1d98cc')
         .then(user => {
-            req.user = new User(user.name, user.email, user.cart, user._id);    
+            req.user = user;
             next();
         })
         .catch(err => {
@@ -34,8 +34,25 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-    app.listen(3000);
-})
+mongoose.connect('mongodb+srv://Akshay:Akshay@cluster0.pmyad.mongodb.net/shop?retryWrites=true&w=majority')
+    .then(result => {
+        User.findOne()
+        .then(user => {
+            if(!user) {
+                User.create({
+                    name: 'Akshay',
+                    email: 'akshay@gmail.com',
+                    cart: {
+                        items: []
+                    }
+                });
+            }
+        })
+        console.log('CONNECTED!');
+        app.listen(3000);
+    })
+    .catch(err => {
+        console.log(err);
+    });
 
 
